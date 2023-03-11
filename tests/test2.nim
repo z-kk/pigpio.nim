@@ -3,8 +3,11 @@ import unittest
 import
   std / [os, strutils]
 
-import pigpio
-test "test pin up/down":
+import pigpio/pigpiod_if2
+test "test if2":
+  var pi = pigpio_start(nil, "8888")
+  require pi != PI_INIT_FAILED
+
   var pin: cuint
   while true:
     stdout.write "target pin: "
@@ -24,19 +27,19 @@ test "test pin up/down":
   stdout.write "init pin HIGH? [Y/n] "
   let isInitHigh = stdin.readLine.toLower != "n"
 
-  require gpioInitialise() != PI_INIT_FAILED
-  require pin.gpioSetMode(PI_OUTPUT) == 0
+  require pi.set_mode(pin, PI_OUTPUT) == 0
+
   let (off, on) =
     if isInitHigh:
       (PI_HIGH, PI_LOW)
     else:
       (PI_LOW, PI_HIGH)
 
-  check pin.gpioWrite(off) == 0
+  check pi.gpio_write(pin, off) == 0
 
   sleep 100
-  check pin.gpioWrite(on) == 0
+  check pi.gpio_write(pin, on) == 0
   sleep 500
-  check pin.gpioWrite(off) == 0
+  check pi.gpio_write(pin, off) == 0
 
-  gpioTerminate()
+  pi.pigpio_stop
